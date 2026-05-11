@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Movie {
+  id             Int           @id @default(autoincrement())
+  title          String
+  genre          String
+  runtimeMinutes Int           @map("runtime_minutes")
+  rating         String
+  posterTone     String        @map("poster_tone")
+  synopsis       String
+  reservations   Reservation[]
+  screenings     Screening[]
+
+  @@map("movies")
+}
+
+model Screening {
+  id           Int           @id @default(autoincrement())
+  movieId      Int           @map("movie_id")
+  startsAt     DateTime      @map("starts_at")
+  room         String
+  ticketPrice  Int           @map("ticket_price")
+  movie        Movie         @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+
+  @@index([movieId])
+  @@map("screenings")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  role         String        @default("customer")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  reservations Reservation[]
+
+  @@map("users")
+}
+
+model Reservation {
+  id           Int       @id @default(autoincrement())
+  userId       Int?      @map("user_id")
+  customerName String    @map("customer_name")
+  email        String
+  movieId      Int       @map("movie_id")
+  screeningId  Int       @map("screening_id")
+  seatNumber   String    @map("seat_number")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  movie        Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  screening    Screening @relation(fields: [screeningId], references: [id], onDelete: Cascade)
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([screeningId, seatNumber])
+  @@index([screeningId])
+  @@index([userId])
+  @@map("reservations")
+}

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const movie = MovieModel.create(validation.movie);
+  const movie = await MovieModel.create(validation.movie);
   await deleteCachedKey("movies:with-screenings");
   return Response.json({ movie }, { status: 201 });
 }

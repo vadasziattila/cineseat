@@ -16,9 +16,6 @@ import type {
   User,
 } from "@/lib/cineseat-types";
 
-const ADMIN_EMAIL = "admin@cineseat.local";
-const ADMIN_PASSWORD = "admin123";
-
 const EMPTY_MOVIE_DRAFT: AdminMovieDraft = {
   title: "",
   genre: "",
@@ -54,8 +51,8 @@ export default function AdminDashboard() {
   const [newMovie, setNewMovie] = useState<AdminMovieDraft>(EMPTY_MOVIE_DRAFT);
   const [newScreening, setNewScreening] =
     useState<AdminScreeningDraft>(EMPTY_SCREENING_DRAFT);
-  const [authEmail, setAuthEmail] = useState(ADMIN_EMAIL);
-  const [authPassword, setAuthPassword] = useState(ADMIN_PASSWORD);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
   const [authStatus, setAuthStatus] = useState("");
   const [adminStatus, setAdminStatus] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -133,8 +130,8 @@ export default function AdminDashboard() {
     }
 
     setUser(data.user);
-    setAuthEmail(ADMIN_EMAIL);
-    setAuthPassword(ADMIN_PASSWORD);
+    setAuthEmail("");
+    setAuthPassword("");
     setAuthStatus("Sikeres admin belépés.");
     await loadMovies();
   }
@@ -263,8 +260,8 @@ export default function AdminDashboard() {
               </p>
               <h2 className="mt-2 text-3xl font-black">Admin azonosítás</h2>
               <p className="mt-3 max-w-xl text-sm leading-6 text-[#5d574f]">
-                Az admin felület csak admin szerepkörrel érhető el. Alapértelmezett
-                admin: `admin@cineseat.local` / `admin123`.
+                Az admin felület csak admin szerepkörrel érhető el. A belépési
+                adatokat a környezeti változók határozzák meg.
               </p>
             </div>
             <form className="grid content-start gap-3" onSubmit={handleLogin}>

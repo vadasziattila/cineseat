@@ -1,5 +1,5 @@
-import { SessionModel, UserModel } from "@/lib/cinema-db";
-import { cacheSessionUser, createSessionCookie } from "@/lib/auth";
+import { UserModel } from "@/lib/cinema-db";
+import { createJwt, createSessionCookie } from "@/lib/auth";
 import { validateUserInput } from "@/lib/cinema-core";
 
 export const runtime = "nodejs";
@@ -17,19 +17,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    const user = UserModel.create(validation.user);
-    const session = SessionModel.create(user.id);
-    await cacheSessionUser(session.token, user, session.expiresAt);
+    const user = await UserModel.create(validation.user);
+    const token = createJwt(user);
 
     return Response.json(
       { user },
       {
         status: 201,
-        headers: { "Set-Cookie": createSessionCookie(session.token, session.expiresAt) },
+        headers: { "Set-Cookie": createSessionCookie(token) },
       },
     );
   } catch (error) {
-    if (error instanceof Error && error.message.includes("UNIQUE")) {
+    if (error instanceof Error && (error.message.includes("Unique") || error.message.includes("P2002"))) {
       return Response.json(
         { message: "Ezzel az e-mail címmel már van felhasználó." },
         { status: 409 },

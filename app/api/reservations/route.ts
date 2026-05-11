@@ -21,18 +21,18 @@ export async function GET(request: Request) {
       return Response.json({ message: "Bejelentkezés szükséges." }, { status: 401 });
     }
 
-    return Response.json({ reservations: ReservationModel.findByUser(user.id) });
+    return Response.json({ reservations: await ReservationModel.findByUser(user.id) });
   }
 
   if (Number.isInteger(screeningId) && screeningId > 0) {
-    const reservations = ReservationModel.findByScreening(screeningId);
+    const reservations = await ReservationModel.findByScreening(screeningId);
     return Response.json({
       reservations,
       seatMap: buildSeatMap(reservations),
     });
   }
 
-  return Response.json({ reservations: ReservationModel.findAll() });
+  return Response.json({ reservations: await ReservationModel.findAll() });
 }
 
 export async function POST(request: Request) {
@@ -47,9 +47,9 @@ export async function POST(request: Request) {
   }
 
   const { reservation } = validation;
-  const screening = ScreeningModel.findById(reservation.screeningId);
+  const screening = await ScreeningModel.findById(reservation.screeningId);
 
-  if (!MovieModel.exists(reservation.movieId) || !screening) {
+  if (!(await MovieModel.exists(reservation.movieId)) || !screening) {
     return Response.json(
       { message: "A kiválasztott film vagy vetítés nem található." },
       { status: 404 },
@@ -66,14 +66,14 @@ export async function POST(request: Request) {
   const user = await getCurrentUser(request);
 
   try {
-    const createdReservation = ReservationModel.create({
+    const createdReservation = await ReservationModel.create({
       ...reservation,
       userId: user?.id ?? null,
     });
     await deleteCachedKey("movies:with-screenings");
     return Response.json({ reservation: createdReservation }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message.includes("UNIQUE")) {
+    if (error instanceof Error && (error.message.includes("Unique") || error.message.includes("P2002"))) {
       return Response.json(
         { message: "Ez az ülőhely már foglalt erre a vetítésre." },
         { status: 409 },

@@ -21,11 +21,11 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!MovieModel.exists(validation.screening.movieId)) {
+  if (!(await MovieModel.exists(validation.screening.movieId))) {
     return Response.json({ message: "A film nem található." }, { status: 404 });
   }
 
-  const screening = ScreeningModel.create(validation.screening);
+  const screening = await ScreeningModel.create(validation.screening);
   await deleteCachedKey("movies:with-screenings");
 
   return Response.json({ screening }, { status: 201 });

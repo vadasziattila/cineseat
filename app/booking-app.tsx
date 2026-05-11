@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable react-hooks/exhaustive-deps */
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { MemberPanel } from "./_components/member-panel";
 import { Metric } from "./_components/metric";
@@ -16,26 +16,33 @@ import type {
   User,
 } from "@/lib/cineseat-types";
 
-const DEFAULT_AUTH_EMAIL = "demo@cineseat.local";
-const DEFAULT_AUTH_PASSWORD = "demo123";
+interface BookingAppProps {
+  initialMovies: Movie[];
+  initialSeatMap: SeatRow[];
+}
 
-export default function BookingApp() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
-  const [selectedScreeningId, setSelectedScreeningId] = useState<number | null>(null);
-  const [seatMap, setSeatMap] = useState<SeatRow[]>([]);
+export default function BookingApp({ initialMovies, initialSeatMap }: BookingAppProps) {
+  const [movies, setMovies] = useState<Movie[]>(initialMovies);
+  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(
+    initialMovies[0]?.id ?? null,
+  );
+  const [selectedScreeningId, setSelectedScreeningId] = useState<number | null>(
+    initialMovies[0]?.screenings[0]?.id ?? null,
+  );
+  const [seatMap, setSeatMap] = useState<SeatRow[]>(initialSeatMap);
   const [selectedSeat, setSelectedSeat] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [email, setEmail] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authName, setAuthName] = useState("");
-  const [authEmail, setAuthEmail] = useState(DEFAULT_AUTH_EMAIL);
-  const [authPassword, setAuthPassword] = useState(DEFAULT_AUTH_PASSWORD);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
   const [myReservations, setMyReservations] = useState<ReservationSummary[]>([]);
   const [status, setStatus] = useState("");
   const [authStatus, setAuthStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const hasUsedServerSeatMap = useRef(initialSeatMap.length > 0);
 
   const selectedMovie = useMemo(
     () => movies.find((movie) => movie.id === selectedMovieId) ?? null,
@@ -51,13 +58,16 @@ export default function BookingApp() {
   );
 
   useEffect(() => {
-    void loadMovies();
     void loadCurrentUser();
   }, []);
 
   useEffect(() => {
     async function loadSeats() {
       if (!selectedScreeningId) return;
+      if (hasUsedServerSeatMap.current) {
+        hasUsedServerSeatMap.current = false;
+        return;
+      }
 
       const response = await fetch(`/api/reservations?screeningId=${selectedScreeningId}`);
       const data = (await response.json()) as { seatMap: SeatRow[] };
@@ -109,8 +119,8 @@ export default function BookingApp() {
   function resetAuthForm() {
     setAuthMode("login");
     setAuthName("");
-    setAuthEmail(DEFAULT_AUTH_EMAIL);
-    setAuthPassword(DEFAULT_AUTH_PASSWORD);
+    setAuthEmail("");
+    setAuthPassword("");
   }
 
   async function handleAuth(event: FormEvent<HTMLFormElement>) {

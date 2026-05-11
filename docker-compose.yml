@@ -1,0 +1,29 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    volumes:
+      - cineseat-redis:/data
+
+  cineseat:
+    build: .
+    depends_on:
+      - redis
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: ${DOCKER_DATABASE_URL}
+      DEFAULT_ADMIN_EMAIL: ${DEFAULT_ADMIN_EMAIL}
+      DEFAULT_ADMIN_NAME: ${DEFAULT_ADMIN_NAME}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD}
+      DEFAULT_DEMO_EMAIL: ${DEFAULT_DEMO_EMAIL}
+      DEFAULT_DEMO_NAME: ${DEFAULT_DEMO_NAME}
+      DEFAULT_DEMO_PASSWORD: ${DEFAULT_DEMO_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: ${DOCKER_REDIS_URL}
+    volumes:
+      - cineseat-data:/app/data
+
+volumes:
+  cineseat-data:
+  cineseat-redis:

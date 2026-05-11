@@ -27,7 +27,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     );
   }
 
-  if (!MovieModel.update(movieId, validation.movie)) {
+  if (!(await MovieModel.update(movieId, validation.movie))) {
     return Response.json({ message: "A film nem található." }, { status: 404 });
   }
 
